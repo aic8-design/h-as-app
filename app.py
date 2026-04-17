@@ -71,10 +71,11 @@ if submit_button:
                 
                 # 드라이브에 올리고 링크(webViewLink)를 받아옴
                 uploaded_photo = drive_service.files().create(
-                    body=file_metadata, 
-                    media_body=media, 
-                    fields='id, webViewLink'
-                ).execute()
+		    body=file_metadata, 
+		    media_body=media, 
+		    fields='id, webViewLink',
+		    supportsAllDrives=True  
+		).execute()
                 
                 # 사진 링크 추출
                 file_link = uploaded_photo.get('webViewLink')
