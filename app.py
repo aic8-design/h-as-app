@@ -24,7 +24,8 @@ try:
     
     # --- 드라이브 접속기 (사진 업로드용 추가) ---
     credentials = service_account.Credentials.from_service_account_info(
-        service_info, scopes=['https://www.googleapis.com/auth/drive']
+	service_info, 
+	scopes=['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
     )
     drive_service = build('drive', 'v3', credentials=credentials)
     
@@ -67,7 +68,7 @@ if submit_button:
             
             with st.spinner("📸 사진을 안전하게 금고(드라이브)에 저장 중입니다..."):
                 file_metadata = {'name': file_name, 'parents': [DRIVE_FOLDER_ID]}
-                media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), mimetype=uploaded_file.type, resumable=True)
+                media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), mimetype=uploaded_file.type, resumable=False) 
                 
                 # 드라이브에 올리고 링크(webViewLink)를 받아옴
                 uploaded_photo = drive_service.files().create(
