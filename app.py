@@ -54,36 +54,33 @@ with st.form("as_form", clear_on_submit=True):
     submit_button = st.form_submit_button("구글 서버로 전송")
 
 # 4. 🚀 데이터 전송 로직
+# 🚀 사진 업로드 실패해도 데이터는 저장되게 하는 '방어형' 코드
 if submit_button:
     if not manager:
         st.warning("담당자 이름을 입력해 주세요!")
     else:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        file_link = "사진 업로드 실패"
         
-        file_link = "사진 없음" # 기본값
-        
-        # 사진이 첨부되었다면 구글 드라이브에 업로드!
         if uploaded_file:
-            file_name = uploaded_file.name.replace("_", " ")
-            
-            with st.spinner("📸 사진을 안전하게 금고(드라이브)에 저장 중입니다..."):
-                file_metadata = {'name': file_name, 'parents': [DRIVE_FOLDER_ID]}
-                media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), mimetype=uploaded_file.type, resumable=False) 
+            try:
+                # 사진 업로드 시도
+                file_name = uploaded_file.name.replace("_", " ")
+                media = MediaIoBaseUpload(io.BytesIO(uploaded_file.getvalue()), mimetype=uploaded_file.type, resumable=False)
                 
-                # 드라이브에 올리고 링크(webViewLink)를 받아옴
                 uploaded_photo = drive_service.files().create(
-		    body=file_metadata, 
-		    media_body=media, 
-		    fields='id, webViewLink',
-		    supportsAllDrives=True  
-		).execute()
-                
-                # 사진 링크 추출
+                    body={'name': file_name, 'parents': [DRIVE_FOLDER_ID]}, 
+                    media_body=media, 
+                    fields='id, webViewLink',
+                    supportsAllDrives=True
+                ).execute()
                 file_link = uploaded_photo.get('webViewLink')
-        
-        # 구글 시트에는 사진 이름 대신 '사진 웹 링크'를 적어줍니다!
+            except Exception as photo_error:
+                # 사진 실패 시 에러 메시지만 남기고 다음으로 진행
+                file_link = f"오류: {photo_error}"
+                st.error("📸 사진 업로드 중 문제가 발생했습니다. 하지만 데이터는 전송됩니다.")
+
+        # 데이터는 무조건 구글 시트에 기록!
         row = [now, company, f"{status} ({detail})" if detail else status, manager, file_link]
         worksheet.append_row(row)
-        
-        st.success(f"✅ {company} 접수 완료! (사진 링크 생성 성공)")
-        st.balloons()
+        st.success(f"✅ 데이터 전송 완료! (사진: {file_link})")
