@@ -50,7 +50,7 @@ if 'nav_customer' not in st.session_state:
 def load_sheet_data(sheet_name):
     try:
         worksheet = sh.worksheet(sheet_name)
-        records = worksheet.get_all_records(head=1) # (1행이 제목일 경우 1, 2행일 경우 2)
+        records = worksheet.get_all_records(head=2) # (1행이 제목일 경우 1, 2행일 경우 2)
         return pd.DataFrame(records)
     except Exception as e:
         return pd.DataFrame()
